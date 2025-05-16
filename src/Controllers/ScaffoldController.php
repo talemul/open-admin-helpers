@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use OpenAdmin\Admin\Auth\Database\Menu;
 use OpenAdmin\Admin\Helpers\Scaffold\MigrationCreator;
 use OpenAdmin\Admin\Helpers\Scaffold\ModelCreator;
+use OpenAdmin\Admin\Helpers\Scaffold\ControllerCreator;
 use OpenAdmin\Admin\Layout\Content;
 
 class ScaffoldController extends Controller
@@ -77,10 +78,16 @@ class ScaffoldController extends Controller
                 $message .= '<br>Menu item: created, route: '.$route;
             }
 
-            // 5. Create controller.
+//            // 5. Create controller.
+//            if (in_array('controller', $request->get('create'))) {
+//                Artisan::call('admin:controller \\\\'.addslashes($request->get('model_name')).' --name='.$this->getControllerName($request->get('controller_name')));
+//                $message .= '<br>Controller:'.nl2br(trim(Artisan::output()));
+//            }
+
+            // 2. Create controller.
             if (in_array('controller', $request->get('create'))) {
-                Artisan::call('admin:controller \\\\'.addslashes($request->get('model_name')).' --name='.$this->getControllerName($request->get('controller_name')));
-                $message .= '<br>Controller:'.nl2br(trim(Artisan::output()));
+                $paths['controller'] = (new ControllerCreator($request->get('controller_name')))
+                    ->create($request->get('model_name'), $request->get('fields'));
             }
         } catch (\Exception $exception) {
             Log::error(
