@@ -82,7 +82,13 @@ class ScaffoldController extends Controller
                 $message .= '<br>Controller:'.nl2br(trim(Artisan::output()));
             }
         } catch (\Exception $exception) {
-
+            Log::error(
+                'Exception caught in file: ' . $exception->getFile() .
+                ' at line: ' . $exception->getLine() .
+                ' - Message: ' . $exception->getMessage() .
+                ' - Code: ' . $exception->getCode() .
+                ' - Trace: ' . $exception->getTraceAsString()
+            );
             // Delete generated files if exception thrown.
             app('files')->delete($paths);
 
