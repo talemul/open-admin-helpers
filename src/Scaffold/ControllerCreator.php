@@ -151,9 +151,25 @@ class ControllerCreator
         }
 
         foreach ($fields as $field) {
-            $rows[] = "\$form->text('{$field['name']}', '{$field['name']}');\n";
+            $type='text';
+            if(array_key_exists('type', $field)){
+                if('mediumText'==$field['type']||'longText'==$field['type']){
+                    $type='textarea';
+                }elseif ($field['type']=='date'){
+                    $type='date';
+                }elseif ($field['type']=='dateTime'){
+                    $type='datetime';
+                }elseif ($field['type']=='timestamp'){
+                    $type='time';
+                }elseif ($field['type']=='decimal'||$field['type']=='double'||$field['type']=='float'){
+                    $type='number';
+                }elseif ($field['type']=='integer'||$field['type']=='tinyInteger'||$field['type']=='smallInteger'||$field['type']=='mediumInteger'||$field['type']=='bigInteger'){
+                    $type='number';
+                }
+            }
+            $rows[] = "\$form->$type('{$field['name']}', '{$field['name']}');\n";
         }
-Log::info($rows);
+        Log::info($rows);
         $this->DummyFormField = trim(implode(str_repeat(' ', 8), $rows), "\n");
 
         return $this;
@@ -187,7 +203,7 @@ Log::info($rows);
             throw new \Exception('Table fields can\'t be empty');
         }
         foreach ($fields as $field) {
-            $rows[] = "\$grid->{$field['name']}('{$field['name']}');\n";
+            $rows[] = "\$grid->column('{$field['name']}','{$field['name']}')->sortable();\n";
         }
 
         $this->DummyGridField = trim(implode(str_repeat(' ', 8), $rows), "\n");
