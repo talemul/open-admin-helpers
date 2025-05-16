@@ -84,7 +84,7 @@ class ScaffoldController extends Controller
 //                $message .= '<br>Controller:'.nl2br(trim(Artisan::output()));
 //            }
 
-            Log::info($request->get('fields')->toJson());
+            Log::info($request->get('fields'));
             // 2. Create controller.
             if (in_array('controller', $request->get('create'))) {
                 $paths['controller'] = (new ControllerCreator($request->get('controller_name')))
