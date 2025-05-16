@@ -2,6 +2,8 @@
 
 namespace OpenAdmin\Admin\Helpers\Scaffold;
 
+use Illuminate\Support\Facades\Log;
+
 class ControllerCreator
 {
     /**
@@ -151,7 +153,7 @@ class ControllerCreator
         foreach ($fields as $field) {
             $rows[] = "\$form->text('{$field['name']}', '{$field['name']}');\n";
         }
-
+Log::info($rows);
         $this->DummyFormField = trim(implode(str_repeat(' ', 8), $rows), "\n");
 
         return $this;
