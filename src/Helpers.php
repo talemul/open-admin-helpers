@@ -34,6 +34,7 @@ class Helpers extends Extension
             $router->get('helpers/terminal/artisan', 'OpenAdmin\Admin\Helpers\Controllers\TerminalController@artisan');
             $router->post('helpers/terminal/artisan', 'OpenAdmin\Admin\Helpers\Controllers\TerminalController@runArtisan');
             $router->get('helpers/scaffold', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@index');
+            $router->get('helpers/scaffold/{id}/edit', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@edit');
             $router->post('helpers/scaffold', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@store');
             $router->get('helpers/routes', 'OpenAdmin\Admin\Helpers\Controllers\RouteController@index');
         });

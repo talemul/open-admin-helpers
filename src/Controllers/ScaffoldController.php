@@ -5,11 +5,14 @@ namespace OpenAdmin\Admin\Helpers\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
 use OpenAdmin\Admin\Auth\Database\Menu;
+use OpenAdmin\Admin\Helpers\Model\Scaffold;
+use OpenAdmin\Admin\Helpers\Model\ScaffoldDetail;
 use OpenAdmin\Admin\Helpers\Scaffold\MigrationCreator;
 use OpenAdmin\Admin\Helpers\Scaffold\ModelCreator;
 use OpenAdmin\Admin\Helpers\Scaffold\ControllerCreator;
@@ -42,6 +45,36 @@ class ScaffoldController extends Controller
         $message = '';
 
         try {
+            $request->validate([
+                'table_name' => 'required|string',
+                'fields' => 'required|array',
+            ]);
+
+            DB::transaction(function () use ($request) {
+                $scaffold = Scaffold::create([
+                    'table_name' => $request->input('table_name'),
+                    'model_name' => $request->input('model_name'),
+                    'controller_name' => $request->input('controller_name'),
+                    'create_options' => $request->input('create', []),
+                    'primary_key' => $request->input('primary_key', 'id'),
+                    'timestamps' => $request->has('timestamps'),
+                    'soft_deletes' => $request->has('soft_deletes'),
+                ]);
+
+                foreach ($request->input('fields', []) as $index => $field) {
+                    ScaffoldDetail::create([
+                        'scaffold_id' => $scaffold->id,
+                        'name' => $field['name'] ?? null,
+                        'type' => $field['type'] ?? null,
+                        'nullable' => isset($field['nullable']) ? true : false,
+                        'key' => $field['key'] ?? null,
+                        'default' => $field['default'] ?? null,
+                        'comment' => $field['comment'] ?? null,
+                        'order' => $index,
+                    ]);
+                }
+            });
+
 
             // 1. Create model.
             if (in_array('model', $request->get('create'))) {
