@@ -89,7 +89,7 @@ class ScaffoldController extends Controller
 
             // 2. Create migration.
             if (in_array('migration', $request->get('create'))) {
-                $migrationName = 'create_'.$request->get('table_name').'_table';
+                $migrationName = 'create_' . $request->get('table_name') . '_table';
 
                 $paths['migration'] = (new MigrationCreator(app('files'), '/'))->buildBluePrint(
                     $request->get('fields'),
@@ -108,7 +108,7 @@ class ScaffoldController extends Controller
             // 4. Create menu item.
             if (in_array('menu_item', $request->get('create'))) {
                 $route = $this->createMenuItem($request);
-                $message .= '<br>Menu item: created, route: '.$route;
+                $message .= '<br>Menu item: created, route: ' . $route;
             }
 
 //            // 5. Create controller.
@@ -140,6 +140,25 @@ class ScaffoldController extends Controller
         return $this->backWithSuccess($paths, $message);
     }
 
+    public function edit($id, Content $content)
+    {
+        $scaffold = Scaffold::with('details')->findOrFail($id);
+
+        $dbTypes = [
+            'string', 'integer', 'text', 'float', 'double', 'decimal', 'boolean', 'date', 'time',
+            'dateTime', 'timestamp', 'char', 'mediumText', 'longText', 'tinyInteger', 'smallInteger',
+            'mediumInteger', 'bigInteger', 'unsignedTinyInteger', 'unsignedSmallInteger', 'unsignedMediumInteger',
+            'unsignedInteger', 'unsignedBigInteger', 'enum', 'json', 'jsonb', 'dateTimeTz', 'timeTz',
+            'timestampTz', 'nullableTimestamps', 'binary', 'ipAddress', 'macAddress',
+        ];
+
+        $action = route('scaffold.update', $scaffold->id);
+
+        return $content
+            ->header('Edit Scaffold')
+            ->row(view('open-admin-helpers::scaffold', compact('scaffold', 'dbTypes', 'action')));
+    }
+
     public function getRoute($request)
     {
         return Str::plural(Str::kebab(class_basename($request->get('model_name'))));
@@ -151,10 +170,10 @@ class ScaffoldController extends Controller
         $lastOrder = Menu::max('order');
         $root = [
             'parent_id' => 0,
-            'order'     => $lastOrder++,
-            'title'     => ucfirst($route),
-            'icon'      => 'icon-file',
-            'uri'       => $route,
+            'order' => $lastOrder++,
+            'title' => ucfirst($route),
+            'icon' => 'icon-file',
+            'uri' => $route,
         ];
         $root = Menu::create($root);
 
@@ -169,7 +188,7 @@ class ScaffoldController extends Controller
     protected function backWithException(\Exception $exception)
     {
         $error = new MessageBag([
-            'title'   => 'Error',
+            'title' => 'Error',
             'message' => $exception->getMessage(),
         ]);
 
@@ -181,13 +200,13 @@ class ScaffoldController extends Controller
         $messages = [];
 
         foreach ($paths as $name => $path) {
-            $messages[] = ucfirst($name).": $path";
+            $messages[] = ucfirst($name) . ": $path";
         }
 
         $messages[] = $message;
 
         $success = new MessageBag([
-            'title'   => 'Success',
+            'title' => 'Success',
             'message' => implode('<br />', $messages),
         ]);
 
