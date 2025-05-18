@@ -10,8 +10,8 @@ class CreateScaffoldsTable extends Migration
     {
         $connection = config('admin.database.connection') ?: config('database.default');
 
-        $scaffoldTable = config('admin.extensions.helpers.scaffolds', 'helper_scaffolds');
-        $scaffoldDetailsTable = config('admin.extensions.helpers.scaffold_details', 'scaffold_details');
+        $scaffoldTable = 'helper_scaffolds';
+        $scaffoldDetailsTable = 'helper_scaffold_details';
 
         Schema::connection($connection)->create($scaffoldTable, function (Blueprint $table) {
             $table->id();
@@ -50,8 +50,8 @@ class CreateScaffoldsTable extends Migration
     public function down()
     {
         $connection = config('admin.database.connection') ?: config('database.default');
-        Schema::connection($connection)->dropIfExists(config('admin.extensions.helpers.scaffolds', 'helper_scaffolds'));
-        Schema::connection($connection)->dropIfExists(config('admin.extensions.helpers.scaffold_details', 'scaffold_details'));
+        Schema::connection($connection)->dropIfExists( 'helper_scaffolds');
+        Schema::connection($connection)->dropIfExists( 'helper_scaffold_details');
     }
 }
 

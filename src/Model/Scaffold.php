@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Scaffold extends Model
 {
+    protected $table = 'helper_scaffolds';
     protected $fillable = [
         'table_name', 'model_name', 'controller_name', 'create_options', 'primary_key', 'timestamps', 'soft_deletes'
     ];
