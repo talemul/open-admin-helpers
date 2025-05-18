@@ -159,6 +159,46 @@ class ScaffoldController extends Controller
             ->row(view('open-admin-helpers::scaffold', compact('scaffold', 'dbTypes', 'action')));
     }
 
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'table_name' => 'required|string',
+            'fields' => 'required|array',
+        ]);
+
+        DB::transaction(function () use ($request, $id) {
+            $scaffold = Scaffold::findOrFail($id);
+
+            $scaffold->update([
+                'model_name' => $request->input('model_name'),
+                'controller_name' => $request->input('controller_name'),
+                'create_options' => $request->input('create', []),
+                'primary_key' => $request->input('primary_key', 'id'),
+                'timestamps' => $request->has('timestamps'),
+                'soft_deletes' => $request->has('soft_deletes'),
+            ]);
+
+            // Delete old details and insert new ones
+            $scaffold->details()->delete();
+
+            foreach ($request->input('fields', []) as $index => $field) {
+                ScaffoldDetail::create([
+                    'scaffold_id' => $scaffold->id,
+                    'name' => $field['name'] ?? null,
+                    'type' => $field['type'] ?? null,
+                    'nullable' => isset($field['nullable']),
+                    'key' => $field['key'] ?? null,
+                    'default' => $field['default'] ?? null,
+                    'comment' => $field['comment'] ?? null,
+                    'order' => $index,
+                ]);
+            }
+        });
+        admin_toastr('Scaffold updated', 'success', ['duration' => 5000]);        
+        return redirect()->route('scaffold.edit', $id);
+    }
+
+
     public function getRoute($request)
     {
         return Str::plural(Str::kebab(class_basename($request->get('model_name'))));
