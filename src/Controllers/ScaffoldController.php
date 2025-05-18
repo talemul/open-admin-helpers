@@ -82,13 +82,13 @@ class ScaffoldController extends Controller
 
         $scaffold = Scaffold::findOrFail($id);
 
-        [$scaffold, $paths, $message] = $this->saveScaffold($request, $scaffold);
+        [$scaffold, $paths, $message] = $this->saveScaffold($request, $scaffold,false);
 
         admin_toastr('Scaffold updated successfully', 'success');
-        return redirect()->route('scaffold.edit', $id);
+        return $this->backWithSuccess($paths, $message);
     }
 
-    protected function saveScaffold(Request $request, Scaffold $scaffold = null)
+    protected function saveScaffold(Request $request, Scaffold $scaffold = null,$menu_item=true)
     {
         $paths = [];
         $message = '';
@@ -192,7 +192,7 @@ class ScaffoldController extends Controller
 
 
             // 5. Menu
-            if (in_array('menu_item', $request->get('create'))) {
+            if (in_array('menu_item', $request->get('create'))&&$menu_item) {
                 $route = $this->createMenuItem($request);
                 $message .= '<br>Menu item created at: ' . $route;
             }
