@@ -10,9 +10,9 @@
     <div class="card-body">
         <form method="post" action="{{ $action }}" class="needs-validation" autocomplete="off" id="scaffold">
             @csrf
-{{--            @if(isset($scaffold))--}}
-{{--                @method('PUT')--}}
-{{--            @endif--}}
+            {{--            @if(isset($scaffold))--}}
+            {{--                @method('PUT')--}}
+            {{--            @endif--}}
             <div class="card-body">
                 <div class="row mb-3">
                     <label for="inputTableName" class="col-sm-2 col-form-label">Table name</label>
@@ -43,7 +43,7 @@
                         @php
                             $createOptions = old('create', $scaffold->create_options ?? []);
                         @endphp
-                        @foreach(['migration', 'model', 'controller', 'migrate', 'menu_item'] as $option)
+                        @foreach(['migration', 'model', 'controller', 'migrate', 'menu_item','recreate_table'] as $option)
                             <div class="form-check form-check-inline me-3">
                                 <input class="form-check-input" type="checkbox" name="create[]" value="{{ $option }}" id="{{ $option }}" {{ in_array($option, $createOptions) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="{{ $option }}">{{ ucfirst(str_replace('_', ' ', $option)) }}</label>
@@ -196,18 +196,19 @@
         }
 
         document.getElementById('scaffold').addEventListener('submit', function (event) {
+            const tableInput = document.getElementById('inputTableName');
+            const helpText = document.getElementById('table-name-help');
 
-            event.preventDefault();
-
-            if (document.getElementById('inputTableName').value == '') {
-                document.getElementById('inputTableName').closest('.form-group').classList.add('has-error');
-                document.getElementById('table-name-help').classList.remove('hide');
-
-                return false;
+            if (!tableInput.value.trim()) {
+                event.preventDefault(); // prevent only if empty
+                tableInput.classList.add('is-invalid');
+                helpText.classList.remove('d-none');
+            } else {
+                tableInput.classList.remove('is-invalid');
+                helpText.classList.add('d-none');
             }
-
-            return true;
         });
+
     })();
 
 </script>

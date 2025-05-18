@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
@@ -39,106 +40,6 @@ class ScaffoldController extends Controller
         return $content;
     }
 
-    public function store(Request $request)
-    {
-        $paths = [];
-        $message = '';
-
-        try {
-            $request->validate([
-                'table_name' => 'required|string',
-                'fields' => 'required|array',
-            ]);
-
-            DB::transaction(function () use ($request) {
-                $scaffold = Scaffold::create([
-                    'table_name' => $request->input('table_name'),
-                    'model_name' => $request->input('model_name'),
-                    'controller_name' => $request->input('controller_name'),
-                    'create_options' => $request->input('create', []),
-                    'primary_key' => $request->input('primary_key', 'id'),
-                    'timestamps' => $request->has('timestamps'),
-                    'soft_deletes' => $request->has('soft_deletes'),
-                ]);
-
-                foreach ($request->input('fields', []) as $index => $field) {
-                    ScaffoldDetail::create([
-                        'scaffold_id' => $scaffold->id,
-                        'name' => $field['name'] ?? null,
-                        'type' => $field['type'] ?? null,
-                        'nullable' => isset($field['nullable']) ? true : false,
-                        'key' => $field['key'] ?? null,
-                        'default' => $field['default'] ?? null,
-                        'comment' => $field['comment'] ?? null,
-                        'order' => $index,
-                    ]);
-                }
-            });
-
-
-            // 1. Create model.
-            if (in_array('model', $request->get('create'))) {
-                $modelCreator = new ModelCreator($request->get('table_name'), $request->get('model_name'));
-
-                $paths['model'] = $modelCreator->create(
-                    $request->get('primary_key'),
-                    $request->get('timestamps') == 'on',
-                    $request->get('soft_deletes') == 'on'
-                );
-            }
-
-            // 2. Create migration.
-            if (in_array('migration', $request->get('create'))) {
-                $migrationName = 'create_' . $request->get('table_name') . '_table';
-
-                $paths['migration'] = (new MigrationCreator(app('files'), '/'))->buildBluePrint(
-                    $request->get('fields'),
-                    $request->get('primary_key', 'id'),
-                    $request->get('timestamps') == 'on',
-                    $request->get('soft_deletes') == 'on'
-                )->create($migrationName, database_path('migrations'), $request->get('table_name'));
-            }
-
-            // 3. Run migrate.
-            if (in_array('migrate', $request->get('create'))) {
-                Artisan::call('migrate');
-                $message .= str_replace('Migrated:', '<br>Migrated:', Artisan::output());
-            }
-
-            // 4. Create menu item.
-            if (in_array('menu_item', $request->get('create'))) {
-                $route = $this->createMenuItem($request);
-                $message .= '<br>Menu item: created, route: ' . $route;
-            }
-
-//            // 5. Create controller.
-//            if (in_array('controller', $request->get('create'))) {
-//                Artisan::call('admin:controller \\\\'.addslashes($request->get('model_name')).' --name='.$this->getControllerName($request->get('controller_name')));
-//                $message .= '<br>Controller:'.nl2br(trim(Artisan::output()));
-//            }
-
-            Log::info($request->get('fields'));
-            // 2. Create controller.
-            if (in_array('controller', $request->get('create'))) {
-                $paths['controller'] = (new ControllerCreator($request->get('controller_name')))
-                    ->create($request->get('model_name'), $request->get('fields'));
-            }
-        } catch (\Exception $exception) {
-            Log::error(
-                'Exception caught in file: ' . $exception->getFile() .
-                ' at line: ' . $exception->getLine() .
-                ' - Message: ' . $exception->getMessage() .
-                ' - Code: ' . $exception->getCode() .
-                ' - Trace: ' . $exception->getTraceAsString()
-            );
-            // Delete generated files if exception thrown.
-            app('files')->delete($paths);
-
-            return $this->backWithException($exception);
-        }
-
-        return $this->backWithSuccess($paths, $message);
-    }
 
     public function edit($id, Content $content)
     {
@@ -159,6 +60,19 @@ class ScaffoldController extends Controller
             ->row(view('open-admin-helpers::scaffold', compact('scaffold', 'dbTypes', 'action')));
     }
 
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'table_name' => 'required|string',
+            'fields' => 'required|array',
+        ]);
+
+        [$scaffold, $paths, $message] = $this->saveScaffold($request);
+
+        return $this->backWithSuccess($paths, $message);
+    }
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -166,24 +80,41 @@ class ScaffoldController extends Controller
             'fields' => 'required|array',
         ]);
 
-        DB::transaction(function () use ($request, $id) {
-            $scaffold = Scaffold::findOrFail($id);
+        $scaffold = Scaffold::findOrFail($id);
 
-            $scaffold->update([
+        [$scaffold, $paths, $message] = $this->saveScaffold($request, $scaffold);
+
+        admin_toastr('Scaffold updated successfully', 'success');
+        return redirect()->route('scaffold.edit', $id);
+    }
+
+    protected function saveScaffold(Request $request, Scaffold $scaffold = null)
+    {
+        $paths = [];
+        $message = '';
+
+        DB::transaction(function () use ($request, &$scaffold) {
+            if (!$scaffold) {
+                $scaffold = new Scaffold();
+            }
+
+            $scaffold->fill([
+                'table_name' => $request->input('table_name'),
                 'model_name' => $request->input('model_name'),
                 'controller_name' => $request->input('controller_name'),
                 'create_options' => $request->input('create', []),
                 'primary_key' => $request->input('primary_key', 'id'),
                 'timestamps' => $request->has('timestamps'),
                 'soft_deletes' => $request->has('soft_deletes'),
-            ]);
+            ])->save();
 
-            // Delete old details and insert new ones
-            $scaffold->details()->delete();
+            // Remove old details if updating
+            if ($scaffold->exists) {
+                $scaffold->details()->delete();
+            }
 
             foreach ($request->input('fields', []) as $index => $field) {
-                ScaffoldDetail::create([
-                    'scaffold_id' => $scaffold->id,
+                $scaffold->details()->create([
                     'name' => $field['name'] ?? null,
                     'type' => $field['type'] ?? null,
                     'nullable' => isset($field['nullable']),
@@ -194,50 +125,87 @@ class ScaffoldController extends Controller
                 ]);
             }
         });
-        // 1. Backup + Recreate Model
-        if (in_array('model', $request->get('create'))) {
-            $modelPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $request->get('model_name'))) . '.php');
-            $this->backupIfExists($modelPath);
 
-            $modelCreator = new ModelCreator($request->get('table_name'), $request->get('model_name'));
-            $paths['model'] = $modelCreator->create(
-                $request->get('primary_key'),
-                $request->get('timestamps') == 'on' || $request->has('timestamps'),
-                $request->get('soft_deletes') == 'on' || $request->has('soft_deletes')
-            );
-        }
+        // File generation
+        try {
+            // 1. Model
+            if (in_array('model', $request->get('create'))) {
+                $modelPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $request->get('model_name'))) . '.php');
+                $this->backupIfExists($modelPath);
 
-// 2. Backup + Recreate Migration
-        if (in_array('migration', $request->get('create'))) {
-            $tableName = $request->get('table_name');
-            $migrationName = 'create_' . $tableName . '_table';
-
-            // Find old migration file (assuming naming convention)
-            $migrationFiles = glob(database_path('migrations/*_' . $migrationName . '.php'));
-            foreach ($migrationFiles as $file) {
-                $this->backupIfExists($file);
+                $paths['model'] = (new ModelCreator($request->get('table_name'), $request->get('model_name')))
+                    ->create(
+                        $request->get('primary_key'),
+                        $request->get('timestamps') == 'on' || $request->has('timestamps'),
+                        $request->get('soft_deletes') == 'on' || $request->has('soft_deletes')
+                    );
             }
 
-            $paths['migration'] = (new MigrationCreator(app('files'), '/'))->buildBluePrint(
-                $request->get('fields'),
-                $request->get('primary_key', 'id'),
-                $request->get('timestamps') == 'on' || $request->has('timestamps'),
-                $request->get('soft_deletes') == 'on' || $request->has('soft_deletes')
-            )->create($migrationName, database_path('migrations'), $tableName);
+            // 2. Migration
+            if (in_array('migration', $request->get('create'))) {
+                $tableName = $request->get('table_name');
+                $migrationName = 'create_' . $tableName . '_table';
+                $migrationFiles = glob(database_path('migrations/*_' . $migrationName . '.php'));
+                foreach ($migrationFiles as $file) {
+                    $this->backupIfExists($file);
+                }
+
+                $paths['migration'] = (new MigrationCreator(app('files'), '/'))->buildBluePrint(
+                    $request->get('fields'),
+                    $request->get('primary_key', 'id'),
+                    $request->get('timestamps') == 'on' || $request->has('timestamps'),
+                    $request->get('soft_deletes') == 'on' || $request->has('soft_deletes')
+                )->create($migrationName, database_path('migrations'), $tableName);
+            }
+
+            // 3. Controller
+            if (in_array('controller', $request->get('create'))) {
+                $controllerPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $request->get('controller_name'))) . '.php');
+                $this->backupIfExists($controllerPath);
+
+                $paths['controller'] = (new ControllerCreator($request->get('controller_name')))
+                    ->create($request->get('model_name'), $request->get('fields'));
+            }
+
+            // 4. Migrate DB
+            if (in_array('migrate', $request->get('create'))) {
+                $table = $request->input('table_name');
+                $connection = config('database.default');
+                $schema = DB::connection($connection)->getSchemaBuilder();
+                $shouldMigrate = true;
+
+                if ($schema->hasTable($table)) {
+                    if (in_array('recreate_table', $request->get('create'))) {
+                        $schema->drop($table);
+                        $message .= "<br>Table <code>{$table}</code> dropped successfully.";
+                    } else {
+                        $shouldMigrate = false;
+                        $message .= "<br>Migration skipped: Table <code>{$table}</code> already exists.";
+                    }
+                }
+
+                if ($shouldMigrate) {
+                    Artisan::call('migrate');
+                    $message .= str_replace('Migrated:', '<br>Migrated:', Artisan::output());
+                }
+            }
+
+
+            // 5. Menu
+            if (in_array('menu_item', $request->get('create'))) {
+                $route = $this->createMenuItem($request);
+                $message .= '<br>Menu item created at: ' . $route;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Scaffold generation failed', ['exception' => $e]);
+            app('files')->delete($paths);
+            //throw $e;
         }
 
-// 3. Backup + Recreate Controller
-        if (in_array('controller', $request->get('create'))) {
-            $controllerPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $request->get('controller_name'))) . '.php');
-            $this->backupIfExists($controllerPath);
-
-            $paths['controller'] = (new ControllerCreator($request->get('controller_name')))
-                ->create($request->get('model_name'), $request->get('fields'));
-        }
-
-        admin_toastr('Scaffold updated', 'success', ['duration' => 5000]);
-        return redirect()->route('scaffold.edit', $id);
+        return [$scaffold, $paths, $message];
     }
+
     protected function backupIfExists($path)
     {
         if (file_exists($path)) {
