@@ -194,8 +194,64 @@ class ScaffoldController extends Controller
                 ]);
             }
         });
-        admin_toastr('Scaffold updated', 'success', ['duration' => 5000]);        
+        // 1. Backup + Recreate Model
+        if (in_array('model', $request->get('create'))) {
+            $modelPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $request->get('model_name'))) . '.php');
+            $this->backupIfExists($modelPath);
+
+            $modelCreator = new ModelCreator($request->get('table_name'), $request->get('model_name'));
+            $paths['model'] = $modelCreator->create(
+                $request->get('primary_key'),
+                $request->get('timestamps') == 'on' || $request->has('timestamps'),
+                $request->get('soft_deletes') == 'on' || $request->has('soft_deletes')
+            );
+        }
+
+// 2. Backup + Recreate Migration
+        if (in_array('migration', $request->get('create'))) {
+            $tableName = $request->get('table_name');
+            $migrationName = 'create_' . $tableName . '_table';
+
+            // Find old migration file (assuming naming convention)
+            $migrationFiles = glob(database_path('migrations/*_' . $migrationName . '.php'));
+            foreach ($migrationFiles as $file) {
+                $this->backupIfExists($file);
+            }
+
+            $paths['migration'] = (new MigrationCreator(app('files'), '/'))->buildBluePrint(
+                $request->get('fields'),
+                $request->get('primary_key', 'id'),
+                $request->get('timestamps') == 'on' || $request->has('timestamps'),
+                $request->get('soft_deletes') == 'on' || $request->has('soft_deletes')
+            )->create($migrationName, database_path('migrations'), $tableName);
+        }
+
+// 3. Backup + Recreate Controller
+        if (in_array('controller', $request->get('create'))) {
+            $controllerPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $request->get('controller_name'))) . '.php');
+            $this->backupIfExists($controllerPath);
+
+            $paths['controller'] = (new ControllerCreator($request->get('controller_name')))
+                ->create($request->get('model_name'), $request->get('fields'));
+        }
+
+        admin_toastr('Scaffold updated', 'success', ['duration' => 5000]);
         return redirect()->route('scaffold.edit', $id);
+    }
+    protected function backupIfExists($path)
+    {
+        if (file_exists($path)) {
+            $backupDir = storage_path('scaffold_backups/' . date('YMd_His'));
+            if (!is_dir($backupDir)) {
+                mkdir($backupDir, 0755, true);
+            }
+
+            $filename = basename($path);
+            $newPath = $backupDir . '/' . $filename;
+
+            rename($path, $newPath);
+            Log::info("Backed up existing file: $path to $newPath");
+        }
     }
 
 
