@@ -1,29 +1,29 @@
 {
-    "name": "open-admin-ext/helpers",
-    "description": "Helpers extension for open-admin",
+    "name": "super-admin-ext/helpers",
+    "description": "Helpers extension for super-admin",
     "type": "library",
-    "keywords": ["open-admin", "helpers"],
-    "homepage": "https://github.com/open-admin-org/helpers",
+    "keywords": ["super-admin", "helpers"],
+    "homepage": "https://github.com/super-admin-org/helpers",
     "license": "MIT",
     "authors": [
         {
-            "name": "open-admin",
-            "email": "info@open-admin.org"
+            "name": "super-admin",
+            "email": "talemulislam@gmail.com"
         }
     ],
     "require": {
         "php": ">=7.0.0",
-        "open-admin-org/open-admin": "dev-main"
+        "super-admin-org/super-admin": "dev-main"
     },
     "autoload": {
         "psr-4": {
-            "OpenAdmin\\Admin\\Helpers\\": "src/"
+            "SuperAdmin\\Admin\\Helpers\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "OpenAdmin\\Admin\\Helpers\\HelpersServiceProvider"
+                "SuperAdmin\\Admin\\Helpers\\HelpersServiceProvider"
             ]
         }
     }

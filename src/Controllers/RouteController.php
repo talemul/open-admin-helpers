@@ -1,15 +1,15 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers\Controllers;
+namespace SuperAdmin\Admin\Helpers\Controllers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use OpenAdmin\Admin\Facades\Admin;
-use OpenAdmin\Admin\Grid;
-use OpenAdmin\Admin\Layout\Content;
+use SuperAdmin\Admin\Facades\Admin;
+use SuperAdmin\Admin\Grid;
+use SuperAdmin\Admin\Layout\Content;
 
 class RouteController extends Controller
 {

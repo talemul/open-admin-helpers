@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers;
+namespace SuperAdmin\Admin\Helpers;
 
-use OpenAdmin\Admin\Admin;
-use OpenAdmin\Admin\Auth\Database\Menu;
-use OpenAdmin\Admin\Extension;
+use SuperAdmin\Admin\Admin;
+use SuperAdmin\Admin\Auth\Database\Menu;
+use SuperAdmin\Admin\Extension;
 
 class Helpers extends Extension
 {
@@ -21,7 +21,7 @@ class Helpers extends Extension
     }
 
     /**
-     * Register routes for open-admin.
+     * Register routes for super-admin.
      *
      * @return void
      */
@@ -29,15 +29,18 @@ class Helpers extends Extension
     {
         parent::routes(function ($router) {
             /* @var \Illuminate\Routing\Router $router */
-            $router->get('helpers/terminal/database', 'OpenAdmin\Admin\Helpers\Controllers\TerminalController@database');
-            $router->post('helpers/terminal/database', 'OpenAdmin\Admin\Helpers\Controllers\TerminalController@runDatabase');
-            $router->get('helpers/terminal/artisan', 'OpenAdmin\Admin\Helpers\Controllers\TerminalController@artisan');
-            $router->post('helpers/terminal/artisan', 'OpenAdmin\Admin\Helpers\Controllers\TerminalController@runArtisan');
-            $router->get('helpers/scaffold', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@index');
-            $router->get('helpers/scaffold/{id}/edit', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@edit')->name('scaffold.edit');
-            $router->post('helpers/scaffold/{id}/update', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@update')->name('scaffold.update');
-            $router->post('helpers/scaffold', 'OpenAdmin\Admin\Helpers\Controllers\ScaffoldController@store');
-            $router->get('helpers/routes', 'OpenAdmin\Admin\Helpers\Controllers\RouteController@index');
+            $router->get('helpers/terminal/database', 'SuperAdmin\Admin\Helpers\Controllers\TerminalController@database');
+            $router->post('helpers/terminal/database', 'SuperAdmin\Admin\Helpers\Controllers\TerminalController@runDatabase');
+            $router->get('helpers/terminal/artisan', 'SuperAdmin\Admin\Helpers\Controllers\TerminalController@artisan');
+            $router->post('helpers/terminal/artisan', 'SuperAdmin\Admin\Helpers\Controllers\TerminalController@runArtisan');
+            $router->get('helpers/scaffold', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@index')->name('scaffold.index');
+            $router->get('helpers/scaffold/create', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@create')->name('scaffold.create');
+            $router->get('helpers/scaffold/{id}/edit', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@edit')->name('scaffold.edit');
+            //$router->get('helpers/scaffold/list', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@list')->name('scaffold.list');
+            $router->post('helpers/scaffold/{id}/update', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@update')->name('scaffold.update');
+            $router->delete('helpers/scaffold/{id}', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@destroy')->name('scaffold.destroy');
+            $router->post('helpers/scaffold', 'SuperAdmin\Admin\Helpers\Controllers\ScaffoldController@store')->name('scaffold.store');
+            $router->get('helpers/routes', 'SuperAdmin\Admin\Helpers\Controllers\RouteController@index');
         });
     }
 

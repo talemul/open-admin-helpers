@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers;
+namespace SuperAdmin\Admin\Helpers;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -12,7 +12,7 @@ class HelpersServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'open-admin-helpers');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'super-admin-helpers');
 
         Helpers::boot();
     }

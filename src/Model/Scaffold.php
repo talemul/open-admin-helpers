@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers\Model;
+namespace SuperAdmin\Admin\Helpers\Model;
 
 
 use Illuminate\Database\Eloquent\Model;

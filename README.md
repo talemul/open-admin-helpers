@@ -1,26 +1,26 @@
-Helpers for Open-Admin
+Helpers for Super-Admin
 =========================
 
 <p align="center">
 
 [![StyleCI](https://styleci.io/repos/384432915/shield?branch=main)](https://styleci.io/repos/384432915)
-[![Packagist](https://img.shields.io/github/license/open-admin-org/helpers.svg?style=flat-square&color=brightgreen)](https://packagist.org/packages/open-admin-ext/helpers)
-[![Total Downloads](https://img.shields.io/packagist/dt/open-admin-ext/helpers.svg?style=flat-square)](https://packagist.org/packages/open-admin-ext/helpers)
+[![Packagist](https://img.shields.io/github/license/super-admin-org/helpers.svg?style=flat-square&color=brightgreen)](https://packagist.org/packages/super-admin-ext/helpers)
+[![Total Downloads](https://img.shields.io/packagist/dt/super-admin-ext/helpers.svg?style=flat-square)](https://packagist.org/packages/super-admin-ext/helpers)
 [![Pull request welcome](https://img.shields.io/badge/pr-welcome-green.svg?style=flat-square&color=brightgreen)]()
 
 </p>
 
-[Documentation](http://open-admin.org/docs/en/extension-helpers) 
+[Documentation](http://super-admin.org/docs/en/extension-helpers) 
 
 ## Screenshot
 
-![helpers screenshot](http://open-admin.org/docs/images/screenshots/ext-helpers.png)
+![helpers screenshot](http://super-admin.org/docs/images/screenshots/ext-helpers.png)
 
 
 ## Installation
 
 ```
-$ composer require open-admin-ext/helpers
+$ composer require super-admin-ext/helpers
 ```
 Import menu items.
 ```
@@ -29,7 +29,7 @@ $ php artisan admin:import helpers
 
 ## Usage
 
-See [wiki](http://open-admin.org/docs/en/extension-helpers)
+See [wiki](http://super-admin.org/docs/en/extension-helpers)
 
 License
 ------------

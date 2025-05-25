@@ -211,4 +211,25 @@
 
     })();
 
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const tableInput = document.getElementById('inputTableName');
+        const modelInput = document.getElementById('inputModelName');
+        const controllerInput = document.getElementById('inputControllerName');
+
+        tableInput.addEventListener('input', function () {
+            const rawValue = tableInput.value.trim();
+
+            if (rawValue) {
+                const studly = rawValue
+                    .split(/[_\s-]+/)
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join('');
+
+                modelInput.value = `App\\Models\\${studly}`;
+                controllerInput.value = `App\\Admin\\Controllers\\${studly}Controller`;
+            }
+        });
+    });
 </script>
+

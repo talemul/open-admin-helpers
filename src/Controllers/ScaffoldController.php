@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers\Controllers;
+namespace SuperAdmin\Admin\Helpers\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -11,17 +11,27 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
-use OpenAdmin\Admin\Auth\Database\Menu;
-use OpenAdmin\Admin\Helpers\Model\Scaffold;
-use OpenAdmin\Admin\Helpers\Model\ScaffoldDetail;
-use OpenAdmin\Admin\Helpers\Scaffold\MigrationCreator;
-use OpenAdmin\Admin\Helpers\Scaffold\ModelCreator;
-use OpenAdmin\Admin\Helpers\Scaffold\ControllerCreator;
-use OpenAdmin\Admin\Layout\Content;
+use SuperAdmin\Admin\Auth\Database\Menu;
+use SuperAdmin\Admin\Helpers\Model\Scaffold;
+use SuperAdmin\Admin\Helpers\Model\ScaffoldDetail;
+use SuperAdmin\Admin\Helpers\Scaffold\MigrationCreator;
+use SuperAdmin\Admin\Helpers\Scaffold\ModelCreator;
+use SuperAdmin\Admin\Helpers\Scaffold\ControllerCreator;
+use SuperAdmin\Admin\Layout\Content;
 
 class ScaffoldController extends Controller
 {
     public function index(Content $content)
+    {
+        $scaffolds = Scaffold::latest()->paginate(15); // Adjust pagination if needed
+
+        return $content
+            ->header('Scaffold List')
+            ->description('Browse all scaffold definitions')
+            ->row(view('super-admin-helpers::scaffold_list', compact('scaffolds')));
+    }
+
+    public function create(Content $content)
     {
         $content->header('Scaffold');
 
@@ -33,9 +43,8 @@ class ScaffoldController extends Controller
             'timestampTz', 'nullableTimestamps', 'binary', 'ipAddress', 'macAddress',
         ];
 
-        $action = URL::current();
-
-        $content->row(view('open-admin-helpers::scaffold', compact('dbTypes', 'action')));
+        $action = route('scaffold.store');
+        $content->row(view('super-admin-helpers::scaffold', compact('dbTypes', 'action')));
 
         return $content;
     }
@@ -57,7 +66,7 @@ class ScaffoldController extends Controller
 
         return $content
             ->header('Edit Scaffold')
-            ->row(view('open-admin-helpers::scaffold', compact('scaffold', 'dbTypes', 'action')));
+            ->row(view('super-admin-helpers::scaffold', compact('scaffold', 'dbTypes', 'action')));
     }
 
 
@@ -82,13 +91,13 @@ class ScaffoldController extends Controller
 
         $scaffold = Scaffold::findOrFail($id);
 
-        [$scaffold, $paths, $message] = $this->saveScaffold($request, $scaffold,false);
+        [$scaffold, $paths, $message] = $this->saveScaffold($request, $scaffold, false);
 
         admin_toastr('Scaffold updated successfully', 'success');
         return $this->backWithSuccess($paths, $message);
     }
 
-    protected function saveScaffold(Request $request, Scaffold $scaffold = null,$menu_item=true)
+    protected function saveScaffold(Request $request, Scaffold $scaffold = null, $menu_item = true)
     {
         $paths = [];
         $message = '';
@@ -192,7 +201,7 @@ class ScaffoldController extends Controller
 
 
             // 5. Menu
-            if (in_array('menu_item', $request->get('create'))&&$menu_item) {
+            if (in_array('menu_item', $request->get('create')) && $menu_item) {
                 $route = $this->createMenuItem($request);
                 $message .= '<br>Menu item created at: ' . $route;
             }
@@ -219,6 +228,43 @@ class ScaffoldController extends Controller
 
             rename($path, $newPath);
             Log::info("Backed up existing file: $path to $newPath");
+        }
+    }
+
+    public function destroy($id)
+    {
+        $scaffold = Scaffold::with('details')->findOrFail($id);
+
+        try {
+            $paths = [];
+
+            // Build file paths
+            $modelPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $scaffold->model_name)) . '.php');
+            $controllerPath = app_path(str_replace('\\', '/', str_replace('App\\', '', $scaffold->controller_name)) . '.php');
+            $migrationPattern = '*_create_' . $scaffold->table_name . '_table.php';
+            $migrationFiles = glob(database_path('migrations/' . $migrationPattern));
+
+            // Backup and delete files
+            $this->backupIfExists($modelPath);
+            $this->backupIfExists($controllerPath);
+            foreach ($migrationFiles as $file) {
+                $this->backupIfExists($file);
+            }
+
+            // Delete DB records
+            $scaffold->details()->delete();
+            $scaffold->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Scaffold and associated files were deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete scaffold: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete scaffold. Check logs for details.'
+            ], 500);
         }
     }
 

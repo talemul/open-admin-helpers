@@ -42,4 +42,4 @@
         </div>
     </div>
 </div>
-@include("open-admin-helpers::_shared")
+@include("super-admin-helpers::_shared")

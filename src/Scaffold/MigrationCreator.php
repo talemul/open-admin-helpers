@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers\Scaffold;
+namespace SuperAdmin\Admin\Helpers\Scaffold;
 
 use Illuminate\Database\Migrations\MigrationCreator as BaseMigrationCreator;
 use Illuminate\Support\Arr;

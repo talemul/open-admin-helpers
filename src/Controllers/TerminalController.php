@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers\Controllers;
+namespace SuperAdmin\Admin\Helpers\Controllers;
 
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
 use MongoDB\Driver\Command;
 use MongoDB\Driver\Manager;
-use OpenAdmin\Admin\Layout\Content;
+use SuperAdmin\Admin\Layout\Content;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\Output;
@@ -22,7 +22,7 @@ class TerminalController extends Controller
     public function artisan(Content $content)
     {
         $content->header('Artisan terminal');
-        $content->row(view('open-admin-helpers::artisan', ['commands' => $this->organizedCommands()]));
+        $content->row(view('super-admin-helpers::artisan', ['commands' => $this->organizedCommands()]));
 
         return $content;
     }
@@ -45,7 +45,7 @@ class TerminalController extends Controller
     public function database(Content $content)
     {
         $content->header('Database terminal');
-        $content->row(view('open-admin-helpers::database', ['connections' => $this->connections()]));
+        $content->row(view('super-admin-helpers::database', ['connections' => $this->connections()]));
 
         return $content;
     }

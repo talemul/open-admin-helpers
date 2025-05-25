@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\Helpers\Scaffold;
+namespace SuperAdmin\Admin\Helpers\Scaffold;
 
 use Illuminate\Support\Facades\Log;
 
@@ -81,8 +81,8 @@ class ControllerCreator
         $stub = $this->replaceClass($stub, $name);
 
         return str_replace(
-            ['DummyModelNamespace', 'DummyModel', 'DummyGridField', 'DummyShowField', 'DummyFormField'],
-            [$model, class_basename($model), $this->DummyGridField, $this->DummyShowField, $this->DummyFormField],
+            ['DummyModelNamespace', 'DummyModel', 'DummyTitle','DummyGridField', 'DummyShowField', 'DummyFormField'],
+            [$model, class_basename($model),ucfirst(class_basename($model)), $this->DummyGridField, $this->DummyShowField, $this->DummyFormField],
             $stub
         );
     }
